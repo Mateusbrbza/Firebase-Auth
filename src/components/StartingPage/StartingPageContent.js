@@ -9,3 +9,4 @@ const StartingPageContent = () => {
 };
 
 export default StartingPageContent;
+// NOTE
