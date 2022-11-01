@@ -1,51 +1,68 @@
-import { useState, useRef } from 'react';
-
+import { useState, useRef, useContext } from 'react';
 import classes from './AuthForm.module.css';
+import AuthContext from '../../store/auth-context';
 
 const AuthForm = () => {
   const emailInputref = useRef();
-  const passwordInputref = useRef();
+  const passwordInputRef = useRef();
+
+  const authCtx = useContext(AuthContext);
 
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
   };
 
-  const submitHandler = (event) => {
+  const submitHandler = async (event) => { 
     event.preventDefault();
 
     const enteredEmail = emailInputref.current.value;
-    const enteredPassword = passwordInputref.current.value;
-    // NOTE: could add validation here
+    const enteredPassword = passwordInputRef.current.value;
 
+    setIsLoading(true);
+
+    let url;
+  
     if (isLogin) {
+        url = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyC8JW3d6XXCTcV-1Wz5wkk66pMzc7UofRs';
+      } else {
+        url = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC8JW3d6XXCTcV-1Wz5wkk66pMzc7UofRs'
+      }
 
-    } else {
-      fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC8JW3d6XXCTcV-1Wz5wkk66pMzc7UofRs',
-      {
+      const sendData = async () => {
+        const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({
           email: enteredEmail,
           password: enteredPassword,
-          returnSecureToken: true
+          returnSecureToken: true,
         }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    ).then(res => {
-      if (res.ok) {
-
-      } else {
-        return res.json().then(data => {
-          console.log(data);
+        headers: { "Content-Type": "aplication/json"},
         });
-      }
-    });
-  }
-};
+        const data = await response.json();
+        
+        setIsLoading(false);
 
+        if(response.ok) {
+          return data;
+        } else {
+          let errorMessage= "Falha na autenticacao";
+          if(data && data.error && data.error.message) {
+            errorMessage = data.error.message;
+          }
+          throw new Error(errorMessage);
+        }
+      };
+      sendData()
+      .then((data) => {
+        authCtx.login(data.idToken);
+        // console.log(data);
+      })
+      .catch((err) => alert(err.message));
+   };
+  
   return (
     <section className={classes.auth}>
       <h1>{isLogin ? 'Login' : 'Criar conta'}</h1>
@@ -66,12 +83,13 @@ const AuthForm = () => {
           type='password' 
           id='password' 
           required 
-          ref={passwordInputref} 
+          ref={passwordInputRef} 
           />
         </div>
 
         <div className={classes.actions}>
-          <button>{isLogin ? 'Entrar' : 'Criar conta'}</button>
+          {!isLoading && <button>{isLogin ? 'Entrar' : 'Criar conta'}</button>}
+          {isLoading && <p>Enviando solicitacao...</p>}
           <button
             type='button'
             className={classes.toggle}
@@ -80,10 +98,9 @@ const AuthForm = () => {
             {isLogin ? 'Criar conta' : 'Entrar com conta existente'}
           </button>
         </div>
-      
       </form>
     </section>
   );
-};
+}
 
-export default AuthForm;
+  export default AuthForm;
