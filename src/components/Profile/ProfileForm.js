@@ -22,11 +22,10 @@ const ProfileForm = () => {
         returnSecureToken: false,
       }),
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
     }).then(res => {
       //assumindo que sempre dara certo
-      console.log("senha alterada")
     })
   };
 
