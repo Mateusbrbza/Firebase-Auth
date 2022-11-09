@@ -34,5 +34,5 @@ function App() {
   );
 }
 
+// coulddo somthng like {!authCtx.isLoggedIn && <Redirect to='/auth' />} too
 export default App;
-// NOTE
